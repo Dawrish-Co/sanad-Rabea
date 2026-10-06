@@ -1,0 +1,32 @@
+{
+  "name": "sanad-transaction-exercise",
+  "version": "1.0.0",
+  "description": "SANAD appointment transaction exercise",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": [
+    "sanad",
+    "nodejs",
+    "express",
+    "mongodb",
+    "transaction"
+  ],
+  "author": "Rabea Shaban",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^18.0.3",
+    "express": "^5.2.1",
+    "joi": "^18.2.9",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.10.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}
