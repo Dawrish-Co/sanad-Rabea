@@ -1,304 +1,714 @@
 {
   "info": {
-    "_postman_id": "a55f977a-fdcd-436d-b65d-27a67c315c65",
-    "name": "sanad_transaction",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_exporter_id": "53395759",
-    "_collection_link": "https://go.postman.co/collection/53395759-a55f977a-fdcd-436d-b65d-27a67c315c65?source=collection_link"
+    "name": "SANAD Healthcare API",
+    "_postman_id": "sanad-healthcare-collection",
+    "description": "Complete API collection for SANAD Healthcare — Auth, Appointments, Bookings, Medical Records, Audit Logs",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8000/api/v1" },
+    { "key": "doctorToken", "value": "" },
+    { "key": "patientToken", "value": "" },
+    { "key": "appointmentId", "value": "" },
+    { "key": "bookingId", "value": "" },
+    { "key": "medicalRecordId", "value": "" }
+  ],
   "item": [
     {
-      "name": "auth",
+      "name": "Auth",
       "item": [
         {
-          "name": "register",
+          "name": "Register Doctor",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('success true', () => pm.expect(pm.response.json().success).to.be.true);"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/register",
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"name\": \"Dr Ahmed\",\r\n  \"email\": \"doctor@test.com\",\r\n  \"password\": \"123456\",\r\n  \"role\": \"DOCTOR\"\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "http://localhost:5000/api/v1/auth/register",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "5000",
-              "path": [
-                "api",
-                "v1",
-                "auth",
-                "register"
-              ]
+              "raw": "{\n  \"name\": \"Dr. Ahmed Ali\",\n  \"email\": \"doctor@sanad.com\",\n  \"password\": \"Doctor@123\",\n  \"role\": \"DOCTOR\"\n}"
             }
-          },
-          "response": []
+          }
         },
         {
-          "name": "login",
+          "name": "Register Patient",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('success true', () => pm.expect(pm.response.json().success).to.be.true);"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/register",
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"email\": \"rabea@example.com\",\r\n  \"password\": \"Password123\"\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "http://localhost:5000/api/v1/auth/login",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "5000",
-              "path": [
-                "api",
-                "v1",
-                "auth",
-                "login"
-              ]
+              "raw": "{\n  \"name\": \"Mohamed Hassan\",\n  \"email\": \"patient@sanad.com\",\n  \"password\": \"Patient@123\",\n  \"role\": \"PATIENT\"\n}"
             }
-          },
-          "response": []
+          }
         },
         {
-          "name": "logout",
+          "name": "Register — Duplicate Email (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Email already registered', () => pm.expect(pm.response.json().message).to.include('already registered'));"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/register",
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"email\": \"rabea@example.com\",\r\n  \"password\": \"Password123\"\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "http://localhost:5000/api/v1/auth/login",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "5000",
-              "path": [
-                "api",
-                "v1",
-                "auth",
-                "login"
-              ]
+              "raw": "{\n  \"name\": \"Dr. Ahmed Ali\",\n  \"email\": \"doctor@sanad.com\",\n  \"password\": \"Doctor@123\",\n  \"role\": \"DOCTOR\"\n}"
             }
-          },
-          "response": []
+          }
         },
         {
-          "name": "getME",
+          "name": "Register — Validation Error (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Validation failed', () => pm.expect(pm.response.json().message).to.equal('Validation failed'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"\",\n  \"email\": \"not-an-email\",\n  \"password\": \"123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login Doctor",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('success true', () => pm.expect(pm.response.json().success).to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"doctor@sanad.com\",\n  \"password\": \"Doctor@123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login Patient",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('success true', () => pm.expect(pm.response.json().success).to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"patient@sanad.com\",\n  \"password\": \"Patient@123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login — Wrong Password (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Invalid credentials', () => pm.expect(pm.response.json().message).to.include('Invalid'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"doctor@sanad.com\",\n  \"password\": \"WrongPassword\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Me (Doctor)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Has user data', () => pm.expect(pm.response.json().data.user).to.exist);"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "GET",
             "header": [],
-            "url": {
-              "raw": "http://localhost:5000/api/v1/auth/me",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "5000",
-              "path": [
-                "api",
-                "v1",
-                "auth",
-                "me"
-              ]
+            "url": "{{baseUrl}}/auth/me"
+          }
+        },
+        {
+          "name": "Get Me — No Token (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ]
+              }
             }
-          },
-          "response": []
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Cookie", "value": "", "disabled": true }],
+            "url": "{{baseUrl}}/auth/me"
+          }
+        },
+        {
+          "name": "Logout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Logout successful', () => pm.expect(pm.response.json().message).to.equal('Logout successful'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/auth/logout"
+          }
         }
       ]
     },
     {
-      "name": "appointments",
+      "name": "Appointments",
       "item": [
         {
-          "name": "appointments",
+          "name": "Create Appointment Slot (Doctor)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.test('success true', () => pm.expect(json.success).to.be.true);",
+                  "if (json.data && json.data.appointment) {",
+                  "  pm.collectionVariables.set('appointmentId', json.data.appointment._id);",
+                  "}"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/appointments",
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"date\": \"2026-09-25\",\r\n  \"startTime\": \"10:00\",\r\n  \"endTime\": \"10:30\"\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "http://localhost:5000/api/v1/appointments",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "5000",
-              "path": [
-                "api",
-                "v1",
-                "appointments"
-              ]
+              "raw": "{\n  \"date\": \"2025-12-01\",\n  \"startTime\": \"09:00\",\n  \"endTime\": \"09:30\"\n}"
             }
-          },
-          "response": []
+          }
         },
         {
-          "name": "appointments",
+          "name": "Create Appointment — Overlapping Slot (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Overlap error', () => pm.expect(pm.response.json().message).to.include('overlaps'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/appointments",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"2025-12-01\",\n  \"startTime\": \"09:15\",\n  \"endTime\": \"09:45\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Create Appointment — End Before Start (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/appointments",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"2025-12-01\",\n  \"startTime\": \"10:00\",\n  \"endTime\": \"09:00\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Create Appointment — Patient Forbidden (403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/appointments",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"2025-12-01\",\n  \"startTime\": \"11:00\",\n  \"endTime\": \"11:30\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Available Appointments",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Has appointments array', () => pm.expect(pm.response.json().data.appointments).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "GET",
             "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\r\n  \"date\": \"2026-09-25\",\r\n  \"startTime\": \"10:00\",\r\n  \"endTime\": \"10:30\"\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "http://localhost:5000/api/v1/appointments",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "5000",
-              "path": [
-                "api",
-                "v1",
-                "appointments"
-              ]
-            }
-          },
-          "response": []
+            "url": "{{baseUrl}}/appointments/available"
+          }
         },
         {
-          "name": "booked",
+          "name": "Get Doctor's All Appointments",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Has appointments array', () => pm.expect(pm.response.json().data.appointments).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "GET",
             "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\r\n  \"date\": \"2026-09-25\",\r\n  \"startTime\": \"10:00\",\r\n  \"endTime\": \"10:30\"\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
+            "url": "{{baseUrl}}/appointments"
+          }
+        },
+        {
+          "name": "Get Doctor's Booked Appointments",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Has appointments array', () => pm.expect(pm.response.json().data.appointments).to.be.an('array'));"
+                ]
               }
-            },
-            "url": {
-              "raw": "http://localhost:5000/api/v1/appointments/booked",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "5000",
-              "path": [
-                "api",
-                "v1",
-                "appointments",
-                "booked"
-              ]
             }
-          },
-          "response": []
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/appointments/booked"
+          }
         }
       ]
     },
     {
-      "name": "bookin",
+      "name": "Bookings",
       "item": [
         {
-          "name": "bookings",
+          "name": "Book Appointment (Patient)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.test('success true', () => pm.expect(json.success).to.be.true);",
+                  "pm.test('Slot is BOOKED', () => pm.expect(json.data.appointment.status).to.equal('BOOKED'));",
+                  "if (json.data && json.data.booking) {",
+                  "  pm.collectionVariables.set('bookingId', json.data.booking._id);",
+                  "}"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/bookings",
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"appointmentId\": \"6ab399884b6c693c298d95aa\"\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "http://localhost:8000/api/v1/bookings",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "8000",
-              "path": [
-                "api",
-                "v1",
-                "bookings"
-              ]
+              "raw": "{\n  \"appointmentId\": \"{{appointmentId}}\"\n}"
             }
-          },
-          "response": []
+          }
         },
         {
-          "name": "available",
+          "name": "Double Booking — Same Slot (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Not available', () => pm.expect(pm.response.json().message).to.include('not available'));"
+                ]
+              }
+            }
+          ],
           "request": {
-            "method": "GET",
-            "header": [],
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/bookings",
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"date\": \"2026-09-25\",\r\n  \"startTime\": \"10:00\",\r\n  \"endTime\": \"10:30\"\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "http://localhost:5000/api/v1/appointments/available",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "5000",
-              "path": [
-                "api",
-                "v1",
-                "appointments",
-                "available"
-              ]
+              "raw": "{\n  \"appointmentId\": \"{{appointmentId}}\"\n}"
             }
-          },
-          "response": []
+          }
+        },
+        {
+          "name": "Book — Missing appointmentId (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/bookings",
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "Book — Doctor Forbidden (403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/bookings",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"appointmentId\": \"{{appointmentId}}\"\n}"
+            }
+          }
         }
       ]
     },
     {
-      "name": "New Request",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": ""
+      "name": "Medical Records",
+      "item": [
+        {
+          "name": "Create Medical Record (Doctor)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.test('success true', () => pm.expect(json.success).to.be.true);",
+                  "if (json.data && json.data._id) {",
+                  "  pm.collectionVariables.set('medicalRecordId', json.data._id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/medical-records",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patientId\": \"PASTE_PATIENT_ID_HERE\",\n  \"diagnosis\": \"Hypertension\",\n  \"notes\": \"Patient has high blood pressure. Prescribed medication.\",\n  \"consentGiven\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Medical Record — Patient (Own Record)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Has data', () => pm.expect(pm.response.json().data).to.exist);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/medical-records/{{medicalRecordId}}"
+          }
+        },
+        {
+          "name": "Get Medical Record — Doctor (With Consent)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/medical-records/{{medicalRecordId}}"
+          }
+        },
+        {
+          "name": "Get Medical Record — Doctor (No Consent → 403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));",
+                  "pm.test('Access denied', () => pm.expect(pm.response.json().message).to.equal('Access denied'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/medical-records/{{medicalRecordId}}"
+          }
+        },
+        {
+          "name": "Get Medical Record — Not Found (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/medical-records/000000000000000000000000"
+          }
+        },
+        {
+          "name": "Update Medical Record (Doctor)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Updated successfully', () => pm.expect(pm.response.json().message).to.include('updated'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/medical-records/{{medicalRecordId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"diagnosis\": \"Hypertension Stage 2\",\n  \"notes\": \"Updated notes after follow-up visit.\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Medical Record — No Consent (403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/medical-records/{{medicalRecordId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"diagnosis\": \"Should not update\"\n}"
+            }
+          }
         }
-      },
-      "response": []
+      ]
+    },
+    {
+      "name": "Audit Logs",
+      "item": [
+        {
+          "name": "Get All Audit Logs",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Has data array', () => pm.expect(pm.response.json().data).to.be.an('array'));",
+                  "pm.test('Has count', () => pm.expect(pm.response.json().count).to.be.a('number'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/audit-logs"
+          }
+        },
+        {
+          "name": "Get Audit Logs — No Token (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Cookie", "value": "", "disabled": true }],
+            "url": "{{baseUrl}}/audit-logs"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "Health Check",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('API running', () => pm.expect(pm.response.json().message).to.include('running'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/health"
+          }
+        }
+      ]
     }
   ]
 }
