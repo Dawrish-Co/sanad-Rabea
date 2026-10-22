@@ -629,11 +629,32 @@ The **SANAD Healthcare Mini Backend Service** provides a production-grade, modul
    - 43 automated tests across 3 suites executed via Jest and Supertest.
    - Portable local MongoDB Replica Set manager (`replicaSetManager.js`) that auto-starts a single-node replica set (`rs0`) on port 27018 with its own data directory (`.test-rs-data`) and cleans up after test execution.
 
+# Interactive API Documentation (Swagger / OpenAPI 3.0.3)
+
+The SANAD Healthcare Backend provides complete, production-quality **OpenAPI 3.0.3** and **Swagger UI** documentation:
+
+- **Live Interactive Swagger UI**: [https://sanad-healthcare-backend.vercel.app/api-docs](https://sanad-healthcare-backend.vercel.app/api-docs)
+- **Live OpenAPI 3.0.3 JSON Specification**: [https://sanad-healthcare-backend.vercel.app/api-docs.json](https://sanad-healthcare-backend.vercel.app/api-docs.json)
+- **Local Swagger UI**: `http://localhost:5000/api-docs`
+- **Local OpenAPI Specification**: `http://localhost:5000/api-docs.json`
+
+### Documentation Highlights
+- **Interactive "Try It Out" Console**: Execute requests against the live or local API directly from the browser.
+- **JWT Bearer Authorization Scheme**: Click the **Authorize 🔓** button in Swagger UI to test protected endpoints using a JWT token obtained from `POST /api/v1/auth/login` or `POST /api/v1/auth/register`.
+- **Zero External Data Leakage**: External schema validator is disabled (`validatorUrl: null`), keeping API specifications private.
+- **Vercel Serverless Resilient**: Styled and configured with zero missing asset dependencies in serverless environments.
+- **Fictional Healthcare Data Only**: All request and response examples use strictly synthetic placeholder data (zero real PHI/PII).
+- **14 Documented Endpoints**: Every route across System, Auth, Appointments, Bookings, Medical Records, and Audit Logs is fully documented with exact status codes, parameters, and schemas.
+
+---
+
 # Deployment & Live Demo
 
 The backend is deployed live on **Vercel**:
 
 - **Live Production URL**: [https://sanad-healthcare-backend.vercel.app](https://sanad-healthcare-backend.vercel.app)
+- **Interactive Swagger UI**: [https://sanad-healthcare-backend.vercel.app/api-docs](https://sanad-healthcare-backend.vercel.app/api-docs)
+- **OpenAPI JSON Spec**: [https://sanad-healthcare-backend.vercel.app/api-docs.json](https://sanad-healthcare-backend.vercel.app/api-docs.json)
 - **Health Check Endpoint**: [https://sanad-healthcare-backend.vercel.app/api/v1/health](https://sanad-healthcare-backend.vercel.app/api/v1/health) (Verified `HTTP 200: {"success":true,"message":"SANAD API is running"}`)
 
 ### Configuration & Deployment Architecture

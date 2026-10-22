@@ -25,14 +25,17 @@
     "express": "^5.2.1",
     "joi": "^18.2.9",
     "jsonwebtoken": "^9.0.3",
-    "mongoose": "^9.10.2"
+    "mongoose": "^9.10.2",
+    "swagger-ui-express": "^5.0.1"
   },
   "jest": {
     "testEnvironment": "node",
     "testTimeout": 60000,
     "globalSetup": "./src/tests/jest.globalSetup.js",
     "globalTeardown": "./src/tests/jest.globalTeardown.js",
-    "setupFiles": ["./src/tests/jest.setup.js"]
+    "setupFiles": [
+      "./src/tests/jest.setup.js"
+    ]
   },
   "devDependencies": {
     "jest": "^30.5.2",

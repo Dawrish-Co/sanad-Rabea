@@ -5,12 +5,21 @@ const authRoutes = require("./modules/auth/auth.routes");
 const appointmentRoutes = require("./modules/appointment/appointment.routes");
 const medicalRecordRoutes = require("./modules/medicalRecord/medicalRecord.routes");
 const auditRoutes = require("./modules/audit/audit.routes");
+const { router: docsRouter } = require("./docs/swagger");
 
 const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+// Root redirects to interactive Swagger documentation
+app.get("/", (req, res) => {
+  res.redirect("/api-docs");
+});
+
+// Swagger & OpenAPI Documentation Endpoints (/api-docs, /api-docs.json)
+app.use(docsRouter);
 
 app.get("/api/v1/health", (req, res) => {
   res.status(200).json({
@@ -24,4 +33,5 @@ app.use("/api/v1/appointments", appointmentRoutes);
 app.use("/api/v1/bookings", bookingRoutes);
 app.use("/api/v1/medical-records", medicalRecordRoutes);
 app.use("/api/v1/audit-logs", auditRoutes);
+
 module.exports = app;
