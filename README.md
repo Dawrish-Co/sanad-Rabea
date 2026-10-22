@@ -587,20 +587,53 @@ The implementation was verified through automated end-to-end integration and sec
 The automated test execution confirmed:
 
 ```text
-Test Suites: 2 passed, 2 total
-Tests:       31 passed, 31 total (0 failed, 0 blocked)
-- src/tests/booking.test.js: 11 passed (ACID transaction commit, rollback, retry, isolation, concurrency)
-- src/tests/audit.test.js:   20 passed (access control, audit integrity, PII/PHI sanitization)
+Test Suites: 3 passed, 3 total
+Tests:       43 passed, 43 total (0 failed, 0 blocked)
+- src/tests/appointment.test.js: 12 passed (slot creation, validation, overlap conflict 409, doctor schedule, available slots)
+- src/tests/booking.test.js:     11 passed (ACID transaction commit, rollback, retry, isolation, concurrency)
+- src/tests/audit.test.js:       20 passed (access control, audit integrity, PII/PHI sanitization)
 ```
 
 The audit events and transaction guarantees were verified against genuine MongoDB multi-document transactions.
 
 ---
 
+# Week 6 — Mini Backend Service
+
+The **SANAD Healthcare Mini Backend Service** provides a production-grade, modular REST API encompassing:
+
+1. **Authentication & Identity (`auth`)**:
+   - Role-based access control (`DOCTOR`, `PATIENT`).
+   - Secure password hashing with bcryptjs (10 salt rounds).
+   - JWT tokens signed with expiration and validated on every protected route.
+
+2. **Appointment Scheduling & Slot Conflict Prevention (`appointment`)**:
+   - Doctors create discrete appointment slots validated via Joi (`createAppointmentSchema`).
+   - Algorithmic overlap and duplicate conflict detection (`startMinutes < existingEnd && endMinutes > existingStart`) returning `409 Conflict`.
+   - Distinct views for doctor schedule (`/api/v1/appointments`, `/api/v1/appointments/booked`) and patient discovery (`/api/v1/appointments/available`).
+
+3. **ACID Transactional Booking Engine (`booking`)**:
+   - Multi-document transactions on MongoDB Replica Sets passing a single session across slot reservation and booking document creation.
+   - Idempotency and double-booking prevention returning `409 Conflict`.
+   - WiredTiger write conflict retry loop with exponential backoff.
+   - Guaranteed rollback (slot remains `AVAILABLE`, zero orphaned bookings) upon mid-transaction failures.
+   - Compensating rollback fallback for standalone MongoDB instances.
+
+4. **Medical Record Access & Auditability (`medicalRecord` & `audit`)**:
+   - Fine-grained authorization: Patient self-access, doctor consent-gated access (`consentGiven === true`).
+   - Immutable audit logging for every access (`READ`) and mutation (`UPDATE`), recording `actor`, `action`, `resource`, `recordId`, `patientId`, `relationship`, `consent`, `outcome` (`SUCCESS` / `DENIED`), and `timestamp`.
+   - Audit write failures prevent sensitive data leaks.
+   - Audit trail endpoint restricted to authorized roles with PII/PHI sanitization.
+
+5. **Automated Testing & Environment Isolation**:
+   - 43 automated tests across 3 suites executed via Jest and Supertest.
+   - Portable local MongoDB Replica Set manager (`replicaSetManager.js`) that auto-starts a single-node replica set (`rs0`) on port 27018 with its own data directory (`.test-rs-data`) and cleans up after test execution.
+
+---
+
 # Conclusion
 
-This codebase implements:
-1. **Week 1 Auditability & Security Hardening**: Strict medical-record access control, atomic audit logging after authorization, denial auditing, PII/PHI minimization, and role-based audit endpoint protection.
-2. **Week 2 Booking Transaction Guarantees**: Multi-document ACID transactions with genuine replica set verification, single-session binding across slot reservation and booking document creation, rollback guarantees with zero orphaned bookings on failure, transient write conflict retry handling, and unique appointment index constraints.
-
-The implementation remains robust, secure, and fully verified with automated test suites.
+The SANAD Healthcare Backend Service satisfies all training objectives:
+- **Week 1 Auditability & Security Hardening**: Strict medical-record access control, atomic audit logging after authorization, denial auditing, PII/PHI minimization, and role-based audit endpoint protection.
+- **Week 2 Booking Transaction Guarantees**: Multi-document ACID transactions with genuine replica set verification, single-session binding across slot reservation and booking document creation, rollback guarantees with zero orphaned bookings on failure, transient write conflict retry handling, and unique appointment index constraints.
+- **Week 6 Mini Backend Service**: Full end-to-end integration of authentication, appointment slot conflict management, transactional booking, medical record access control, structured auditing, and automated regression coverage (43 passed tests).
