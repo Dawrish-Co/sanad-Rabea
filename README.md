@@ -631,28 +631,27 @@ The **SANAD Healthcare Mini Backend Service** provides a production-grade, modul
 
 # Deployment & Live Demo
 
-The backend is configured for serverless deployment on **Vercel** or containerized/Node.js PaaS platforms (e.g. Render, Railway, Fly.io) via [`vercel.json`](file:///d:/Darwish%20&%20Co/New%20folder/Sanad_healthcare/sanad%20Rabea/vercel.json) and [`api/index.js`](file:///d:/Darwish%20&%20Co/New%20folder/Sanad_healthcare/sanad%20Rabea/api/index.js).
+The backend is deployed live on **Vercel**:
 
-### Option 1: Deploy to Vercel (Recommended)
-1. Import the repository [`Dawrish-Co/sanad-Rabea`](https://github.com/Dawrish-Co/sanad-Rabea) into your Vercel Dashboard.
-2. In Project Settings > Environment Variables, configure:
-   - `MONGO_URI`: Your MongoDB Atlas Replica Set connection string (e.g. `mongodb+srv://...`).
-   - `JWT_SECRET`: A secure production secret.
-   - `JWT_EXPIRES_IN`: `1d`
-   - `NODE_ENV`: `production`
-3. Click **Deploy**. Vercel routes all incoming traffic to `api/index.js` via the root rewrites rule.
+- **Live Production URL**: [https://sanad-healthcare-backend.vercel.app](https://sanad-healthcare-backend.vercel.app)
+- **Health Check Endpoint**: [https://sanad-healthcare-backend.vercel.app/api/v1/health](https://sanad-healthcare-backend.vercel.app/api/v1/health) (Verified `HTTP 200: {"success":true,"message":"SANAD API is running"}`)
 
-### Option 2: Live Demo Tunneling (Local Development Demonstration)
-To expose a local running instance for a live demonstration:
+### Configuration & Deployment Architecture
+The backend is structured for serverless execution on **Vercel** via [`vercel.json`](file:///d:/Darwish%20&%20Co/New%20folder/Sanad_healthcare/sanad%20Rabea/vercel.json) and [`api/index.js`](file:///d:/Darwish%20&%20Co/New%20folder/Sanad_healthcare/sanad%20Rabea/api/index.js):
+- Root rewrites forward incoming REST requests to the serverless entrypoint `api/index.js`.
+- Sensitive variables (`JWT_SECRET`, `NODE_ENV`, `JWT_EXPIRES_IN`) are configured as Vercel Secrets.
+- Database connection connects dynamically when `MONGO_URI` is provided in environment variables.
+
+### Local Development & Demonstration
+To run and test the server locally:
 1. Start the server connected to an active MongoDB instance:
    ```bash
    node server.js
    ```
-2. In a separate terminal, expose the port via localtunnel or cloudflared:
+2. Test the local health check:
    ```bash
-   npx localtunnel --port 5000
+   curl http://localhost:5000/api/v1/health
    ```
-3. Access the live endpoint at the generated URL: `https://<subdomain>.loca.lt/api/v1/health`.
 
 ---
 

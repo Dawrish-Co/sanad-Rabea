@@ -8,3 +8,5 @@ npm-debug.log*
 # mongodb-memory-server binary cache
 .cache/
 .test-rs-data/
+
+.vercel
