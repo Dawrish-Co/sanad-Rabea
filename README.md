@@ -130,13 +130,46 @@ FAILED
 
 ---
 
+# Authorization Rules
+
+## Medical Record Creation
+
+Only a **DOCTOR** may create a medical record.
+
+- The `patientId` must reference an existing user with role `PATIENT`.
+- Request body is validated with Joi: `patientId` (required, 24-char hex ObjectId), `diagnosis` (required string), `notes` (optional string), `consentGiven` (optional boolean).
+- A patient attempting to create a record receives `403 Forbidden`.
+- Invalid input format receives `400 Bad Request` with a list of validation errors.
+- A valid-format `patientId` that does not identify an existing patient receives `404 Not Found`.
+
+## Medical Record Access
+
+| Actor | Condition | Outcome |
+|---|---|---|
+| Patient (record owner) | Always | Allowed |
+| Patient (not the owner) | Always | `403 Forbidden` |
+| Doctor | `consentGiven = true` | Allowed |
+| Doctor | `consentGiven = false` | `403 Forbidden` |
+
+A non-owner patient is **never** treated as a doctor. The `relationship` field in the audit log will never be `DOCTOR` for a user whose role is `PATIENT`.
+
+## Audit Log Access
+
+Only a **DOCTOR** may retrieve audit logs via `GET /api/v1/audit-logs`.
+
+- An unauthenticated request receives `401 Unauthorized`.
+- A patient receives `403 Forbidden`.
+- Personally Identifiable Information (PII) and Protected Health Information (PHI) minimization: The endpoint strictly omits patient identifiers (name, email) and clinical record contents (diagnosis, notes), returning only the audit event metadata, ObjectIds, and actor role.
+
+---
+
 # Access and Consent Logic
 
 The implementation uses the following access rules.
 
 ## Patient
 
-A patient can access and update their own medical record.
+A patient can access and update only their own medical record.
 
 The audit event records:
 
@@ -184,7 +217,18 @@ outcome = DENIED
 POST /api/v1/medical-records
 ```
 
-Creates a medical record.
+Creates a medical record. Requires DOCTOR role.
+
+Request body:
+
+```json
+{
+  "patientId": "<ObjectId>",
+  "diagnosis": "string (required)",
+  "notes": "string (optional)",
+  "consentGiven": false
+}
+```
 
 ---
 
@@ -312,7 +356,7 @@ Automated tests were implemented using:
 
 * Jest
 * Supertest
-* MongoDB
+* MongoDB Atlas (dedicated test database)
 * Mongoose
 
 The test file is:
@@ -323,15 +367,54 @@ src/tests/audit.test.js
 
 The test suite covers the following scenarios:
 
-| Test                             | Expected Result |
-| -------------------------------- | --------------- |
-| Patient reads own medical record | SUCCESS         |
-| Doctor reads without consent     | DENIED          |
-| Doctor updates without consent   | DENIED          |
-| Doctor reads with consent        | SUCCESS         |
-| Doctor updates with consent      | SUCCESS         |
+| Test | Expected Result |
+|---|---|
+| Patient reads own medical record | SUCCESS |
+| Doctor reads without consent | DENIED |
+| Doctor updates without consent | DENIED |
+| Doctor reads with consent | SUCCESS |
+| Doctor updates with consent | SUCCESS |
+| Patient reads own record (regression) | 200 |
+| Patient cannot read another patient's record (consent=true) | 403 |
+| Patient cannot update another patient's record | 403 |
+| Doctor without consent cannot read | 403 |
+| Doctor without consent cannot update | 403 |
+| Doctor with consent can read | 200 |
+| Doctor with consent can update | 200 |
+| Patient cannot create a medical record | 403 |
+| Invalid create request format is rejected | 400 |
+| Valid-format non-existent patient returns not found | 404 |
+| Non-owner patient never logged as DOCTOR | audit integrity |
+| Unauthenticated user cannot retrieve audit logs | 401 |
+| Patient cannot retrieve audit logs | 403 |
+| Doctor can retrieve audit logs | 200 |
+| Audit logs minimize PII and PHI (no email/name/clinical data) | privacy verified |
 
-Additional authentication testing is included for the audit-log endpoint.
+---
+
+# Test Database Configuration
+
+Tests connect to a **dedicated test database** (`sanad_test`), completely separate from the application database.
+
+The test suite will **fail immediately** if `TEST_MONGO_URI` is not set or if it is identical to `MONGO_URI`, preventing accidental writes or cleanups against the application database.
+
+After each run, the test suite deletes only the records it created (targeted `deleteMany` by test email and patientId). It does not drop the database.
+
+## Required Environment Variables for Testing
+
+Create a `.env.test` file (never commit it — it is in `.gitignore`):
+
+```text
+MONGO_URI=mongodb://127.0.0.1:27017/sanad_test_placeholder
+TEST_MONGO_URI=mongodb://127.0.0.1:27017/sanad_test
+JWT_SECRET=<dedicated-test-secret-never-copy-from-prod>
+JWT_EXPIRES_IN=1d
+NODE_ENV=test
+```
+
+- `MONGO_URI` is set to a placeholder so the application never connects to the production database during tests.
+- `TEST_MONGO_URI` must point to a dedicated test database (e.g. `sanad_test`), completely separate from the application database.
+- `JWT_SECRET` must be a dedicated test secret. Never copy the production JWT secret into `.env.test`.
 
 ---
 
@@ -340,14 +423,70 @@ Additional authentication testing is included for the audit-log endpoint.
 The automated test suite was executed successfully.
 
 ```text
-PASS  src/tests/audit.test.js
+PASS src/tests/booking.test.js
+  Week 2 — Appointment Booking & Transaction Guarantees
+    √ 0. Precondition: verifies test database is a genuine Replica Set supporting native transactions
+    √ 1. Successful booking: returns 201, slot is BOOKED, booking record exists
+    √ 2. Duplicate booking: second attempt on already booked slot returns 409
+    √ 3. Unavailable slot: non-existent slot returns 409 and creates no booking
+    √ 4. Forced failure after slot update: rolls back and slot remains AVAILABLE
+    √ 5. Failed transaction leaves no orphaned booking
+    √ 6. Retrying after a rollback succeeds when the slot is available
+    √ 7. Concurrent requests attempting to book the same slot: at most one succeeds
+    √ 8. Authorization: doctors cannot book, unauthenticated cannot book, patient cannot spoof identity
+    √ 9. Invalid slot IDs and malformed request bodies are rejected with 400
+    √ 10. Verified that all participating database writes use the exact same transaction session
 
-Test Suites: 1 passed, 1 total
-Tests:       5 passed, 5 total
+PASS src/tests/audit.test.js
+  Audit log creation on medical record access
+    √ should log READ + SUCCESS when patient reads own record
+    √ should log READ + DENIED when doctor reads record without consent
+    √ should log UPDATE + DENIED when doctor updates record without consent
+    √ should log READ + SUCCESS when doctor reads with consent
+    √ should log UPDATE + SUCCESS when doctor updates with consent
+  Medical record authorization — security regression
+    √ 1. patient reads own record — 200
+    √ 2. patient cannot read another patient's record even when consent is true — 403
+    √ 3. patient cannot update another patient's record — 403
+    √ 4. doctor without consent cannot read the record — 403
+    √ 5. doctor without consent cannot update the record — 403
+    √ 6. doctor with consent can read the record — 200
+    √ 7. doctor with consent can update the record — 200
+    √ 8. patient cannot create a medical record — 403
+    √ 9. invalid request data is rejected on create — 400
+    √ valid-format patient ID for non-existent patient returns 404 on create
+    √ audit log: non-owner patient is never logged as DOCTOR
+  Audit log endpoint authorization
+    √ 10. unauthenticated user cannot retrieve audit logs — 401
+    √ 11. patient cannot retrieve audit logs — 403
+    √ 12. doctor can retrieve audit logs — 200
+    √ 13. audit logs minimize PII and PHI (no patient email/name, no diagnosis/notes)
+
+Test Suites: 2 passed, 2 total
+Tests:       31 passed, 31 total
 Snapshots:   0 total
 ```
 
-All auditability scenarios passed successfully.
+All 31 tests across both booking (with genuine multi-document transactions) and medical record audit suites passed.
+
+---
+
+# Week 2 — Appointment Slot Booking & Transaction Guarantees
+
+## Booking Workflow
+
+Patients book available appointment slots through `POST /api/v1/bookings` with `{ "appointmentId": "<ObjectId>" }`.
+
+### Guarantees
+1. **Atomic State Transition**: Slots transition conditionally from `AVAILABLE` to `BOOKED` (`status: "AVAILABLE"` match).
+2. **Double Booking Prevention**: Concurrent or repeated booking requests for the same slot receive `409 Conflict` (`Appointment is not available`).
+3. **Transaction & Rollback**:
+   - On replica-set/sharded deployments: Multi-document ACID transaction guarantees atomic slot update and booking creation.
+   - On standalone deployments: Compensating rollback guarantees the slot is restored to `AVAILABLE` without orphaned records if downstream operations fail.
+4. **Authorization & Identity Protection**:
+   - Only users with role `PATIENT` can book. Doctors receive `403 Forbidden`.
+   - The booking record strictly uses the authenticated user ID (`req.user.id`). Manipulation of request body patient IDs is ignored.
+5. **Input Validation**: Request body is validated with Joi; malformed or non-hex 24-character IDs return `400 Bad Request`.
 
 ---
 
@@ -390,10 +529,14 @@ yarn dev
 ## Run Tests
 
 ```bash
-yarn test
+npm test
 ```
 
-The test command runs Jest in-band and executes the auditability test suite.
+The test command runs Jest in-band against the dedicated `sanad_test` database on an isolated MongoDB Replica Set.
+
+Before running tests, ensure `.env.test` exists with `TEST_MONGO_URI` set to a dedicated test database (e.g. `mongodb://127.0.0.1:27018/sanad_test?replicaSet=rs0&directConnection=true`). The suite will fail immediately if this variable is missing or identical to `MONGO_URI`.
+
+The test suite includes a Jest `globalSetup` and `globalTeardown` hook (`src/tests/replicaSetManager.js`) that automatically initializes a local single-node Replica Set (`rs0`) on port 27018 with its own data directory (`.test-rs-data`) if not already running, and cleanly shuts it down after test completion.
 
 ---
 
@@ -439,32 +582,25 @@ Check Consent
 
 # Evidence
 
-The implementation was manually verified through API testing and automated tests.
+The implementation was verified through automated end-to-end integration and security regression tests.
 
-The final automated test execution confirmed:
+The automated test execution confirmed:
 
 ```text
-5 tests passed
-1 test suite passed
+Test Suites: 2 passed, 2 total
+Tests:       31 passed, 31 total (0 failed, 0 blocked)
+- src/tests/booking.test.js: 11 passed (ACID transaction commit, rollback, retry, isolation, concurrency)
+- src/tests/audit.test.js:   20 passed (access control, audit integrity, PII/PHI sanitization)
 ```
 
-The audit events were also verified through the audit-log endpoint.
+The audit events and transaction guarantees were verified against genuine MongoDB multi-document transactions.
 
 ---
 
 # Conclusion
 
-This exercise implements a focused auditability mechanism for medical-record access and updates.
+This codebase implements:
+1. **Week 1 Auditability & Security Hardening**: Strict medical-record access control, atomic audit logging after authorization, denial auditing, PII/PHI minimization, and role-based audit endpoint protection.
+2. **Week 2 Booking Transaction Guarantees**: Multi-document ACID transactions with genuine replica set verification, single-session binding across slot reservation and booking document creation, rollback guarantees with zero orphaned bookings on failure, transient write conflict retry handling, and unique appointment index constraints.
 
-Each operation captures the relevant context needed to understand:
-
-* Who performed the operation
-* What operation was performed
-* Which medical record was affected
-* Which patient was involved
-* The actor's relationship to the patient
-* Whether consent was available
-* Whether the operation succeeded or was denied
-* When the event occurred
-
-The implementation remains intentionally limited in scope while providing traceable and structured audit evidence.
+The implementation remains robust, secure, and fully verified with automated test suites.

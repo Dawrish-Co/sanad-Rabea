@@ -19,4 +19,6 @@ const bookingSchema = new mongoose.Schema(
   },
 );
 
+bookingSchema.index({ appointment: 1 }, { unique: true });
+
 module.exports = mongoose.model("Booking", bookingSchema);

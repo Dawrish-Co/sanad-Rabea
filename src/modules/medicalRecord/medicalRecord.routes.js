@@ -6,11 +6,11 @@ const {
   updateMedicalRecord,
 } = require("./medicalRecord.controller");
 
-const { protect } = require("../../middlewares/auth.middleware");
+const { protect, requireRole } = require("../../middlewares/auth.middleware");
 
 const router = express.Router();
 
-router.post("/", protect, createMedicalRecord);
+router.post("/", protect, requireRole("DOCTOR"), createMedicalRecord);
 
 router.get("/:id", protect, getMedicalRecord);
 router.patch("/:id", protect, updateMedicalRecord);

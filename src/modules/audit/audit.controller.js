@@ -4,9 +4,7 @@ const getAuditLogs = async (req, res) => {
   try {
     const auditLogs = await AuditLog.find()
       .sort({ timestamp: -1 })
-      .populate("actor", "name email role")
-      .populate("patientId", "name email")
-      .populate("recordId", "diagnosis notes");
+      .populate("actor", "role");
 
     return res.status(200).json({
       success: true,

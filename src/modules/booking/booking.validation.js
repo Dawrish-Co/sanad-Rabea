@@ -1,39 +1,18 @@
-const mongoose = require("mongoose");
+const Joi = require("joi");
 
-const appointmentSchema = new mongoose.Schema(
-  {
-    doctor: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
+const createBookingSchema = Joi.object({
+  appointmentId: Joi.string()
+    .hex()
+    .length(24)
+    .required()
+    .messages({
+      "string.empty": "Appointment ID is required",
+      "string.hex": "Invalid appointment ID format",
+      "string.length": "Invalid appointment ID format",
+      "any.required": "Appointment ID is required",
+    }),
+});
 
-    date: {
-      type: Date,
-      required: true,
-    },
-
-    startTime: {
-      type: String,
-      required: true,
-    },
-
-    endTime: {
-      type: String,
-      required: true,
-    },
-
-    status: {
-      type: String,
-      enum: ["AVAILABLE", "BOOKED"],
-      default: "AVAILABLE",
-    },
-  },
-  {
-    timestamps: true,
-  },
-);
-
-const Appointment = mongoose.model("Appointment", appointmentSchema);
-
-module.exports = Appointment;
+module.exports = {
+  createBookingSchema,
+};

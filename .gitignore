@@ -3,3 +3,7 @@ node_modules/
 .env.*
 .DS_Store
 npm-debug.log*
+
+# mongodb-memory-server binary cache
+.cache/
+.test-rs-data/
