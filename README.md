@@ -629,6 +629,61 @@ The **SANAD Healthcare Mini Backend Service** provides a production-grade, modul
    - 43 automated tests across 3 suites executed via Jest and Supertest.
    - Portable local MongoDB Replica Set manager (`replicaSetManager.js`) that auto-starts a single-node replica set (`rs0`) on port 27018 with its own data directory (`.test-rs-data`) and cleans up after test execution.
 
+# Deployment & Live Demo
+
+The backend is configured for serverless deployment on **Vercel** or containerized/Node.js PaaS platforms (e.g. Render, Railway, Fly.io) via [`vercel.json`](file:///d:/Darwish%20&%20Co/New%20folder/Sanad_healthcare/sanad%20Rabea/vercel.json) and [`api/index.js`](file:///d:/Darwish%20&%20Co/New%20folder/Sanad_healthcare/sanad%20Rabea/api/index.js).
+
+### Option 1: Deploy to Vercel (Recommended)
+1. Import the repository [`Dawrish-Co/sanad-Rabea`](https://github.com/Dawrish-Co/sanad-Rabea) into your Vercel Dashboard.
+2. In Project Settings > Environment Variables, configure:
+   - `MONGO_URI`: Your MongoDB Atlas Replica Set connection string (e.g. `mongodb+srv://...`).
+   - `JWT_SECRET`: A secure production secret.
+   - `JWT_EXPIRES_IN`: `1d`
+   - `NODE_ENV`: `production`
+3. Click **Deploy**. Vercel routes all incoming traffic to `api/index.js` via the root rewrites rule.
+
+### Option 2: Live Demo Tunneling (Local Development Demonstration)
+To expose a local running instance for a live demonstration:
+1. Start the server connected to an active MongoDB instance:
+   ```bash
+   node server.js
+   ```
+2. In a separate terminal, expose the port via localtunnel or cloudflared:
+   ```bash
+   npx localtunnel --port 5000
+   ```
+3. Access the live endpoint at the generated URL: `https://<subdomain>.loca.lt/api/v1/health`.
+
+---
+
+# Delivery Checklist
+
+| Week | Track & Topic | Required Deliverable | Status | Evidence Location |
+| :--- | :--- | :--- | :---: | :--- |
+| **Week 2** | **SANAD — Transaction Exercise** | Appointment-slot transaction simulation preventing double-booking; commit & rollback handling | **COMPLETE** | • [`src/modules/booking/booking.controller.js`](file:///d:/Darwish%20&%20Co/New%20folder/Sanad_healthcare/sanad%20Rabea/src/modules/booking/booking.controller.js)<br>• [`src/tests/booking.test.js`](file:///d:/Darwish%20&%20Co/New%20folder/Sanad_healthcare/sanad%20Rabea/src/tests/booking.test.js) (11 tests)<br>• Presentation: `doc/SANAD_Transaction_Exercise.pptx`<br>• Postman: `doc/sanad_transaction.postman_collection.json` |
+| **Week 4** | **SANAD — Auditability Exercise** | Structured medical-record access/update audit events with patient relationship & consent context | **COMPLETE** | • [`src/modules/medicalRecord/`](file:///d:/Darwish%20&%20Co/New%20folder/Sanad_healthcare/sanad%20Rabea/src/modules/medicalRecord/) & [`src/modules/audit/`](file:///d:/Darwish%20&%20Co/New%20folder/Sanad_healthcare/sanad%20Rabea/src/modules/audit/)<br>• [`src/tests/audit.test.js`](file:///d:/Darwish%20&%20Co/New%20folder/Sanad_healthcare/sanad%20Rabea/src/tests/audit.test.js) (20 tests)<br>• Presentation: `doc/SANAD_Auditability_Exercise_Presentation.pptx` |
+| **Week 6** | **SANAD — Mini Backend Service** | Standalone API for appointment scheduling & booking with auth, validation, audit, tests & docs | **COMPLETE** | • Repository: [`https://github.com/Dawrish-Co/sanad-Rabea`](https://github.com/Dawrish-Co/sanad-Rabea)<br>• Branch: `main`<br>• Automated test suite (43 passed tests across 3 suites)<br>• Deployment config: [`vercel.json`](file:///d:/Darwish%20&%20Co/New%20folder/Sanad_healthcare/sanad%20Rabea/vercel.json) & [`api/index.js`](file:///d:/Darwish%20&%20Co/New%20folder/Sanad_healthcare/sanad%20Rabea/api/index.js)<br>• Complete API reference & setup instructions |
+
+---
+
+# API Reference Summary
+
+| Method | Endpoint | Auth Required | Allowed Roles | Description |
+| :--- | :--- | :---: | :---: | :--- |
+| `GET` | `/api/v1/health` | No | Any | Service health check |
+| `POST` | `/api/v1/auth/register` | No | Public | Register as `DOCTOR` or `PATIENT` |
+| `POST` | `/api/v1/auth/login` | No | Public | Authenticate and receive JWT cookie |
+| `POST` | `/api/v1/auth/logout` | No | Public | Clear session cookie |
+| `POST` | `/api/v1/appointments` | Yes | `DOCTOR` | Create appointment slot (with overlap detection) |
+| `GET` | `/api/v1/appointments` | Yes | `DOCTOR` | View all doctor's slots |
+| `GET` | `/api/v1/appointments/booked` | Yes | `DOCTOR` | View doctor's booked appointments |
+| `GET` | `/api/v1/appointments/available` | No / Yes | Any | Discover open `AVAILABLE` appointment slots |
+| `POST` | `/api/v1/bookings` | Yes | `PATIENT` | Book appointment slot via ACID transaction |
+| `POST` | `/api/v1/medical-records` | Yes | `DOCTOR` | Create medical record for a patient |
+| `GET` | `/api/v1/medical-records/:id` | Yes | `SELF` or `DOCTOR` | View medical record (audited; consent required for doctor) |
+| `PATCH` | `/api/v1/medical-records/:id` | Yes | `SELF` or `DOCTOR` | Update medical record (audited; consent required for doctor) |
+| `GET` | `/api/v1/audit-logs` | Yes | `DOCTOR` | Query structured audit events (PII/PHI sanitized) |
+
 ---
 
 # Conclusion
