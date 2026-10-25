@@ -14,7 +14,7 @@ const getSwaggerHtml = () => {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SANAD Healthcare API - Interactive Documentation</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%230d9488'><path d='M19 10.5h-4.5V6a1.5 1.5 0 0 0-3 0v4.5H7a1.5 1.5 0 0 0 0 3h4.5V18a1.5 1.5 0 0 0 3 0v-4.5H19a1.5 1.5 0 0 0 0-3z'/></svg>">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.18.2/swagger-ui.min.css" integrity="sha512-V/c0aB6wD8p8H+yN6+fFjI0N2i1i19r5Z0R17K8vO01o0tX7W25L6H0Q2eT9o2y4hR6vK2uV0D7E1q9dC3G+vA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.18.2/swagger-ui.min.css" crossorigin="anonymous" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -237,11 +237,13 @@ const getSwaggerHtml = () => {
 
   <div id="swagger-ui"></div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.18.2/swagger-ui-bundle.min.js" integrity="sha512-P3KekQYf1pI+6a8z5x+bB3mB5yGzB0uN3YlK1Z5gXG7Q102W2z7R6Xl4kO8i2R1u6w2Yq4x+9U5R0T7Y2n3j4g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.18.2/swagger-ui-standalone-preset.min.js" integrity="sha512-sHjJ7XUqI5Y5T7a2h2k4m0Zq0v2k9uX4f8G0a2K5Y5w5l2b4m0Zq0v2k9uX4f8G0a2K5Y5w5l2b4m0Zq0v2k9==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.18.2/swagger-ui-bundle.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.18.2/swagger-ui-standalone-preset.min.js" crossorigin="anonymous"></script>
   <script>
     window.onload = function() {
+      const specData = ${JSON.stringify(openapiSpecification)};
       window.ui = SwaggerUIBundle({
+        spec: specData,
         url: "/api-docs.json",
         dom_id: "#swagger-ui",
         deepLinking: true,
